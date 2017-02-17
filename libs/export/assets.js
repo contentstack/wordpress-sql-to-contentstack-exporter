@@ -84,7 +84,7 @@ ExtractAssets.prototype = {
                             failedAssets.push(assets["ID"])
                             failedJSON[assets["ID"]] = err
                         }
-                        reject(assets["ID"])
+                        resolve(assets["ID"])
                     } else {
                         if (response.statusCode != 200) {
                             if (failedAssets.indexOf(assets["ID"]) == -1) {
