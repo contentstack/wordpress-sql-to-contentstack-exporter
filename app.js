@@ -40,7 +40,6 @@ if(process.argv.length == 3 || process.argv.length == 4) {
 var taskResults = sequence(_export);
 taskResults
     .then(function(results) {
-        successLogger("migration has been completed.");
     })
     .catch(function(error){
         errorLogger(error);

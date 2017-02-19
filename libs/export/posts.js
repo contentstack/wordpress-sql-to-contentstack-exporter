@@ -5,7 +5,10 @@ var mkdirp    = require('mkdirp'),
     path      = require('path'),
     _ = require('lodash'),
     url = require('url'),
-    when      = require('when');
+    fs = require('fs'),
+    when      = require('when'),
+    guard = require('when/guard'),
+    parallel = require('when/parallel');
 
 /**
  * Internal module Dependencies.
@@ -13,6 +16,7 @@ var mkdirp    = require('mkdirp'),
 var helper = require('../../libs/utils/helper.js');
 
 var postConfig = config.modules.posts,
+    link_structure="",site_url="",postids=[],
     postFolderPath = path.resolve(config.data,config.entryfolder, postConfig.dirName),
     assetfolderpath=path.resolve(config.data, config.modules.asset.dirName),
     masterFolderPath = path.resolve(config.data, 'master',config.entryfolder);
@@ -25,6 +29,23 @@ helper.writeFile(path.join(masterFolderPath, postConfig.masterfile),'{"en-us":{}
 
 function ExtractPosts(){
     this.connection=helper.connect();
+    //Get the detail of permalink and siteurl
+    var permalinkquery=config["mysql-query"]["permalink"];
+    permalinkquery=permalinkquery.replace(/<<tableprefix>>/g,config["table_prefix"])
+    this.connection.query(permalinkquery, function(error, rows, fields) {
+        if(!error){
+            if(rows[0]['option_value']&&rows[0]['option_value']!="")
+                link_structure=rows[0]['option_value'];
+        }
+    })
+    var siteurlquery=config["mysql-query"]["siteurl"];
+    siteurlquery=siteurlquery.replace(/<<tableprefix>>/g,config["table_prefix"])
+    this.connection.query(siteurlquery, function(error, rows, fields) {
+        if(!error){
+            site_url=rows[0]['option_value']
+        }
+    })
+
 }
 
 ExtractPosts.prototype = {
@@ -117,57 +138,94 @@ ExtractPosts.prototype = {
 
         })
     },
-    getAllPosts: function() {
+    getPosts: function(skip) {
         var self = this;
         return when.promise(function(resolve, reject) {
-            var permalink_structure="",siteurl="";
-            self.connection.connect()
-            var permalinkquery=config["mysql-query"]["permalink"];
-            permalinkquery=permalinkquery.replace(/<<tableprefix>>/g,config["table_prefix"])
-            self.connection.query(permalinkquery, function(error, rows, fields) {
-                if(!error){
-                    if(rows[0]['option_value']&&rows[0]['option_value']!="")
-                        permalink_structure=rows[0]['option_value'];
-                }
-            })
-            var siteurlquery=config["mysql-query"]["siteurl"];
-            siteurlquery=siteurlquery.replace(/<<tableprefix>>/g,config["table_prefix"])
-            self.connection.query(siteurlquery, function(error, rows, fields) {
-                if(!error){
-                    siteurl=rows[0]['option_value']
-                }
-            })
-            var query=config["mysql-query"]["posts"];
-            query=query.replace(/<<tableprefix>>/g,config["table_prefix"])
+            var query;
+            if(postids.length==0)
+                 query=config["mysql-query"]["posts"]; //Query for all posts
+            else{
+                query = config["mysql-query"]["postsByID"]; //Query for posts by id
+                query=query.replace("<<postids>>","("+postids+")")
+            }
+
+            query=query.replace(/<<tableprefix>>/g,config["table_prefix"]);
+            query = query + " limit " + skip + ",100";
             self.connection.query(query, function(error, rows, fields) {
                 if(!error){
                     if(rows.length>0){
-                        self.putPosts(permalink_structure,siteurl,rows)
-                        self.connection.end();
+                        self.putPosts(link_structure,site_url,rows)
                         resolve();
                     }else{
                         errorLogger("no posts found");
-                        self.connection.end();
-                       resolve()
+                        resolve()
                     }
-
                 }else{
-                    errorLogger('failed to get posts: ', error);
-                    reject(error);
+                    errorLogger("error while exporting posts:", query)
+                    resolve(error);
                 }
             })
         })
     },
+    getPostsIteration: function(postcount){
+        var self = this;
+        return when.promise(function(resolve, reject){
+            var _getPosts = [];
+            for (var i = 0, total = postcount; i < total; i+=100) {
+                _getPosts.push(function(data) {
+                    return function() {
+                        return self.getPosts(data);
+                    };
+                }(i));
+            }
+            var guardTask = guard.bind(null, guard.n(1));
+            _getPosts = _getPosts.map(guardTask);
+            var taskResults = parallel(_getPosts);
+            taskResults
+                .then(function(results) {
+                    self.connection.end();
+                    resolve();
+                })
+                .catch(function(e) {
+                    errorLogger("something wrong while exporting posts:",e);
+                    reject(e);
+                })
+        })
+
+    },
     start: function () {
         successLogger("exporting posts...");
         var self = this;
-        return when.promise(function (resolve, reject) {
-            if(!ids){
-                self.getAllPosts() 
+        return when.promise(function(resolve, reject) {
+            if(!filePath) {
+                var count_query = config["mysql-query"]["postsCount"];
+                count_query = count_query.replace(/<<tableprefix>>/g, config["table_prefix"]);
+                self.connection.query(count_query, function (error, rows, fields) {
+                    if (!error) {
+                        var postcount = rows[0]["postcount"];
+                        if (postcount > 0) {
+                            self.getPostsIteration(postcount)
+                            resolve()
+                        } else {
+                            errorLogger("no posts found");
+                            self.connection.end();
+                            resolve();
+                        }
+                    } else {
+                        errorLogger('failed to get posts count: ', error);
+                        self.connection.end();
+                        reject(error)
+                    }
+                })
             }else{
-                self.getPostByID()
-            } 
-            resolve()
+                if(fs.existsSync(filePath)){
+                    postids=(fs.readFileSync(filePath, 'utf-8')).split(",");
+                }
+                if(postids.length>0){
+                    self.getPostsIteration(postids.length)
+                }
+                resolve();
+            }
         })
     }
 }

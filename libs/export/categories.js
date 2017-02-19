@@ -74,10 +74,10 @@ ExtractCategories.prototype = {
         return when.promise(function(resolve, reject){
             var query;
             if(categoryids.length==0){
-                query = config["mysql-query"]["categories"];   //Query for all authors
+                query = config["mysql-query"]["categories"];   //Query for all categories
             }
             else{
-                query = config["mysql-query"]["categoriesByID"]; //Query for authors by id
+                query = config["mysql-query"]["categoriesByID"]; //Query for caegories by id
                 query=query.replace("<<catids>>","("+categoryids+")")
             }
             query = query.replace(/<<tableprefix>>/g, config["table_prefix"]);
@@ -89,7 +89,7 @@ ExtractCategories.prototype = {
                     }
                     resolve()
                 } else {
-                    errorLogger("Error while exporting authors:", query);
+                    errorLogger("error while exporting categories:", query);
                     resolve(error);
                 }
             })
@@ -115,7 +115,7 @@ ExtractCategories.prototype = {
                     resolve();
                 })
                 .catch(function(e) {
-                    errorLogger("something wrong while exporting categories:::::::",e);
+                    errorLogger("something wrong while exporting categories:",e);
                     reject(e);
                 })
         })

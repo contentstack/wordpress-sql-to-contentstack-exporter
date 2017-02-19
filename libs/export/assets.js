@@ -19,6 +19,7 @@ var helper = require('../../libs/utils/helper.js');
 
 
 var assetConfig = config.modules.asset,
+    assetids=[],
     assetFolderPath = path.resolve(config.data, assetConfig.dirName),
     masterFolderPath = path.resolve(config.data, 'master'),
     failedJSON = helper.readFile(path.join(masterFolderPath, 'wp_failed.json')) || {};
@@ -36,7 +37,6 @@ if (!fs.existsSync(assetFolderPath)) {
 var assetData = helper.readFile(path.join(assetFolderPath, assetConfig.fileName));
 var assetMapping = helper.readFile(path.join(masterFolderPath, assetConfig.fileName));
 var assetURLMapping = helper.readFile(path.join(masterFolderPath, assetConfig.masterfile));
-var failedAssets = [];
 
 function ExtractAssets() {
     this.connection = helper.connect();
@@ -62,7 +62,7 @@ function ExtractAssets() {
 }
 
 ExtractAssets.prototype = {
-    saveAsset: function(assets) {
+    saveAsset: function(assets,retrycount) {
         var self = this;
         return when.promise(function(resolve, reject) {
             var url = assets["guid"];
@@ -80,25 +80,43 @@ ExtractAssets.prototype = {
                     encoding: 'binary'
                 }, function(err, response, body) {
                     if (err) {
-                        if (failedAssets.indexOf(assets["ID"]) == -1) {
-                            failedAssets.push(assets["ID"])
-                            failedJSON[assets["ID"]] = err
+                        failedJSON[assets["ID"]] = err
+                        if(retrycount==1)
+                            return resolve(assets["ID"])
+                        else{
+                            self.saveAsset(assets,1)
+                                .then(function(results){
+                                    resolve();
+                                })
                         }
-                        resolve(assets["ID"])
                     } else {
                         if (response.statusCode != 200) {
-                            if (failedAssets.indexOf(assets["ID"]) == -1) {
-                                failedAssets.push(assets["ID"])
-                                failedJSON[assets["ID"]] = body
+                            var status="status code: "+response.statusCode
+                            failedJSON[assets["ID"]] = status
+                            if(retrycount==1){
+                               resolve(assets["ID"])
                             }
-                            resolve(assets["ID"])
+                            else{
+                                self.saveAsset(assets,1)
+                                    .then(function(results){
+                                        resolve();
+                                    })
+                            }
                         } else {
                             mkdirp.sync(path.resolve(assetFolderPath, assets["ID"].toString()));
                             fs.writeFile(path.join(assetFolderPath, assets["ID"].toString(), name), body, 'binary', function(writeerror) {
                                 if (writeerror) {
-                                    if (failedAssets.indexOf(assets["ID"]) == -1) {
-                                        failedAssets.push(assets["ID"])
-                                        failedJSON[assets["ID"]] = writeerror
+                                    failedJSON[assets["ID"]] = writeerror
+                                    if (fs.existsSync(path.resolve(assetFolderPath, assets["ID"].toString())))
+                                        fs.unlinkSync(path.resolve(assetFolderPath, assets["ID"].toString()))
+
+                                    if(retrycount==1)
+                                        resolve(assets["ID"])
+                                    else{
+                                        self.saveAsset(assets,1)
+                                            .then(function(results){
+                                                resolve();
+                                            })
                                     }
                                 } else {
                                     assetData[assets["ID"]] = {
@@ -113,8 +131,9 @@ ExtractAssets.prototype = {
                                         delete failedJSON[assets["ID"]]
                                     }
                                     successLogger("exported asset " + "'" + assets["ID"] + "'");
+                                    resolve(assets["ID"])
                                 }
-                                resolve(assets["ID"])
+
                             })
                         }
                     }
@@ -122,64 +141,18 @@ ExtractAssets.prototype = {
             }
         })
     },
-    retryFailedAssets: function(assetids) {
+    getAssets: function(skip) {
         var self = this;
         return when.promise(function(resolve, reject) {
-            if (assetids.length > 0) {
-                assetids = assetids.join()
-                var query = config["mysql-query"]["assetByID"];
-                query = query.replace(/<<tableprefix>>/g, config["table_prefix"])
+            var query;
+            if(assetids.length==0)
+                query = config["mysql-query"]["asset"];
+            else{
+                query = config["mysql-query"]["assetByID"]; //Query for asset by id
                 query = query + "(" + assetids + ")"
-                self.connection.query(query, function(error, rows, fields) {
-                    if (!error) {
-                        if (rows.length > 0) {
-                            self.connection.end();
-                            var _getAsset = [];
-                            for (var i = 0, total = rows.length; i < total; i++) {
-                                _getAsset.push(function(data) {
-                                    return function() {
-                                        return self.saveAsset(data);
-                                    };
-                                }(rows[i]));
-                            }
-                            var guardTask = guard.bind(null, guard.n(2));
-                            _getAsset = _getAsset.map(guardTask);
-                            var taskResults = parallel(_getAsset);
-                            taskResults
-                                .then(function(results) {
-                                    helper.writeFile(path.join(assetFolderPath, assetConfig.fileName), JSON.stringify(assetData, null, 4))
-                                    helper.writeFile(path.join(masterFolderPath, assetConfig.fileName), JSON.stringify(assetMapping, null, 4))
-                                    helper.writeFile(path.join(masterFolderPath, assetConfig.masterfile), JSON.stringify(assetURLMapping, null, 4))
-                                    helper.writeFile(path.join(masterFolderPath, 'wp_failed.json'), JSON.stringify(failedJSON, null, 4));
-                                    resolve();
-                                })
-                                .catch(function(e) {
-                                    errorLogger('failed to download assets: ', e);
-                                    reject(e);
-                                })
-                        } else {
-                            errorLogger("no assets found");
-                            self.connection.end();
-                            resolve()
-                        }
-                    } else {
-                        errorLogger('failed to get assets: ', error);
-                        self.connection.end();
-                        reject(error);
-                    }
-                })
-            } else {
-                resolve()
             }
-        })
-
-    },
-
-    getAllAssets: function() {
-        var self = this;
-        return when.promise(function(resolve, reject) {
-            var query = config["mysql-query"]["asset"];
             query = query.replace(/<<tableprefix>>/g, config["table_prefix"])
+            query = query + " limit " + skip + ",100";
             self.connection.query(query, function(error, rows, fields) {
                 if (!error) {
                     if (rows.length > 0) {
@@ -187,7 +160,7 @@ ExtractAssets.prototype = {
                         for (var i = 0, total = rows.length; i < total; i++) {
                             _getAsset.push(function(data) {
                                 return function() {
-                                    return self.saveAsset(data);
+                                    return self.saveAsset(data,0);
                                 };
                             }(rows[i]));
                         }
@@ -199,38 +172,83 @@ ExtractAssets.prototype = {
                                 helper.writeFile(path.join(assetFolderPath, assetConfig.fileName), JSON.stringify(assetData, null, 4))
                                 helper.writeFile(path.join(masterFolderPath, assetConfig.fileName), JSON.stringify(assetMapping, null, 4))
                                 helper.writeFile(path.join(masterFolderPath, assetConfig.masterfile), JSON.stringify(assetURLMapping, null, 4))
-                                if (failedAssets.length > 0) {
-                                    self.retryFailedAssets(failedAssets)
-                                } else {
-                                    self.connection.end();
-                                }
                                 resolve(results);
                             })
                             .catch(function(e) {
                                 errorLogger('failed to download assets: ', e);
-                                reject(e);
+                                resolve()
                             })
                     } else {
                         errorLogger("no assets found");
-                        self.connection.end();
                         resolve()
                     }
                 } else {
-                    errorLogger('failed to get assets: ', error);
-                    self.connection.end();
-                    reject(error);
+                    errorLogger("error while exporting assets:", query)
+                    resolve(error);
                 }
             })
+        })
+    },
+    getAssetsIteration: function(assetcount){
+        var self = this;
+        return when.promise(function(resolve, reject){
+            var _getAssets = [];
+            for (var i = 0, total = assetcount; i < total; i+=100) {
+                _getAssets.push(function(data) {
+                    return function() {
+                        return self.getAssets(data);
+                    };
+                }(i));
+            }
+            var guardTask = guard.bind(null, guard.n(1));
+            _getAssets = _getAssets.map(guardTask);
+            var taskResults = parallel(_getAssets);
+            taskResults
+                .then(function(results) {
+                    self.connection.end();
+                    helper.writeFile(path.join(masterFolderPath, 'wp_failed.json'), JSON.stringify(failedJSON, null, 4));
+                    resolve();
+                })
+                .catch(function(e) {
+                    errorLogger("something wrong while exporting assets:",e);
+                    reject(e);
+                })
         })
     },
     start: function() {
         successLogger("exporting assets...");
         var self = this;
         return when.promise(function(resolve, reject) {
-            self.getAllAssets()
-            resolve()
+            if(!filePath) {
+                var count_query = config["mysql-query"]["assetsCount"];
+                count_query = count_query.replace(/<<tableprefix>>/g, config["table_prefix"]);
+                self.connection.query(count_query, function (error, rows, fields) {
+                    if (!error) {
+                        var assetcount = rows[0]["assetcount"];
+                        if (assetcount > 0) {
+                            self.getAssetsIteration(assetcount)
+                            resolve()
+                        } else {
+                            errorLogger("no assets found");
+                            self.connection.end();
+                            resolve();
+                        }
+                    } else {
+                        errorLogger('failed to get assets count: ', error);
+                        self.connection.end();
+                        reject(error)
+                    }
+                })
+            }else{
+                if(fs.existsSync(filePath)){
+                    assetids=(fs.readFileSync(filePath, 'utf-8')).split(",");
+                }
+                if(assetids.length>0){
+                    self.getAssetsIteration(assetids.length)
+                }
+                resolve();
+            }
         })
-
 
     }
 }

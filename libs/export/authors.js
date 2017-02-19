@@ -70,7 +70,7 @@ ExtractAuthors.prototype = {
                     }
                         resolve()
                 } else {
-                    errorLogger("Error while exporting authors:", query);
+                    errorLogger("error while exporting authors:", query);
                     resolve(error);
                 }
             })
@@ -96,7 +96,7 @@ ExtractAuthors.prototype = {
                     resolve();
                 })
                 .catch(function(e) {
-                    errorLogger("Error come here:::::::",e);
+                    errorLogger("something wrong while exporting authors:",e);
                     reject(e);
                 })
         })
