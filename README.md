@@ -54,6 +54,13 @@ For example, the sequence of module names to be exported can be as follows:
  3. categories
  4. posts
 
+### Export specific modules via ID
+Modules that you wish to export separately or have failed to export (these modules are recorded in the error log or in the wp_failed.json file) can be installed with the help of their IDs. The IDs will be comma-separated and stored in a text file. Now, to export the modules, provide the absolute path of the file that has the IDs when running the following command in a terminal:
+
+```
+  npm run export <<module name>> <<absolute_path_of_the_file>>
+ ```
+
 ## Import content
 Copy the 'contenttype' folder from your project and place it in the path mentioned in the 'data' key within the 'config/index.js' file. The 'contentType' folder consist of the basic schema of content types which will help you to migrate your data.
 
