@@ -1,32 +1,36 @@
 /**
  * External module Dependencies.
  */
-var mkdirp    = require('mkdirp'),
-    path      = require('path'),
-    fs = require('fs'),
-    when      = require('when'),
-    guard = require('when/guard'),
-    parallel = require('when/parallel');
+var mkdirp      = require('mkdirp'),
+    path        = require('path'),
+    fs          = require('fs'),
+    when        = require('when'),
+    guard       = require('when/guard'),
+    parallel    = require('when/parallel');
 
 
 /**
  * Internal module Dependencies.
  */
-var helper = require('../../libs/utils/helper.js');
+var helper      = require('../../libs/utils/helper.js');
 
-var categoryConfig = config.modules.categories,
-    categoryids=[],
-    categoryFolderPath = path.resolve(config.data, config.entryfolder,categoryConfig.dirName),
-    masterFolderPath = path.resolve(config.data, 'master',config.entryfolder);
+var categoryConfig          = config.modules.categories,
+    categoryids             =[],
+    limit                   =100;
+    categoryFolderPath      = path.resolve(config.data, config.entryfolder,categoryConfig.dirName),
+    masterFolderPath        = path.resolve(config.data, 'master',config.entryfolder),
+    categoriesCountQuery    ="SELECT count(<<tableprefix>>terms.term_id)as categorycount FROM <<tableprefix>>terms,<<tableprefix>>term_taxonomy WHERE <<tableprefix>>terms.term_id=<<tableprefix>>term_taxonomy.term_id AND  <<tableprefix>>term_taxonomy.taxonomy='category' ORDER BY <<tableprefix>>term_taxonomy.parent",
+    categoriesQuery         ="SELECT <<tableprefix>>terms.term_id as ID,<<tableprefix>>terms.name,<<tableprefix>>terms.slug,<<tableprefix>>term_taxonomy.description,<<tableprefix>>term_taxonomy.parent FROM <<tableprefix>>terms,<<tableprefix>>term_taxonomy WHERE <<tableprefix>>terms.term_id=<<tableprefix>>term_taxonomy.term_id AND  <<tableprefix>>term_taxonomy.taxonomy='category' ORDER BY <<tableprefix>>term_taxonomy.parent",
+    categoriesByIDQuery     ="SELECT <<tableprefix>>terms.term_id as ID,<<tableprefix>>terms.name,<<tableprefix>>terms.slug,<<tableprefix>>term_taxonomy.description,<<tableprefix>>term_taxonomy.parent FROM <<tableprefix>>terms,<<tableprefix>>term_taxonomy WHERE <<tableprefix>>terms.term_id=<<tableprefix>>term_taxonomy.term_id AND  <<tableprefix>>term_taxonomy.taxonomy='category' AND <<tableprefix>>terms.term_id IN <<catids>> ORDER BY <<tableprefix>>term_taxonomy.parent";
 
 /**
  * Create folders and files
  */
  if (!fs.existsSync(categoryFolderPath)) {
-mkdirp.sync(categoryFolderPath);
-helper.writeFile(path.join(categoryFolderPath,  categoryConfig.fileName))
-mkdirp.sync(masterFolderPath);
-helper.writeFile(path.join(masterFolderPath, categoryConfig.masterfile),'{"en-us":{}}')
+    mkdirp.sync(categoryFolderPath);
+    helper.writeFile(path.join(categoryFolderPath,  categoryConfig.fileName))
+    mkdirp.sync(masterFolderPath);
+    helper.writeFile(path.join(masterFolderPath, categoryConfig.masterfile),'{"en-us":{}}')
 }
 
 
@@ -34,8 +38,8 @@ function ExtractCategories(){
     this.connection=helper.connect();
 }
 
-ExtractCategories.prototype = {
-    putCategories: function(categorydetails){
+ExtractCategories.prototype =  {
+    saveCategories: function(categorydetails){
         return when.promise(function(resolve, reject) {
             var slugRegExp = new RegExp("[^a-z0-9_-]+", "g");
             var categorydata = helper.readFile(path.join(categoryFolderPath, categoryConfig.fileName));
@@ -69,23 +73,23 @@ ExtractCategories.prototype = {
             resolve();
         })
     },
-    getCategories: function(skip){
+    getCategories: function(skip) {
         var self = this;
         return when.promise(function(resolve, reject){
             var query;
             if(categoryids.length==0){
-                query = config["mysql-query"]["categories"];   //Query for all categories
+                query = categoriesQuery;   //Query for all categories
             }
-            else{
-                query = config["mysql-query"]["categoriesByID"]; //Query for caegories by id
+            else {
+                query = categoriesByIDQuery; //Query for caegories by id
                 query=query.replace("<<catids>>","("+categoryids+")")
             }
             query = query.replace(/<<tableprefix>>/g, config["table_prefix"]);
-            query = query + " limit " + skip + ",100";
+            query = query + " limit " + skip + ", " +limit;
             self.connection.query(query, function (error, rows, fields) {
                 if (!error) {
                     if (rows.length > 0) {
-                        self.putCategories(rows)
+                        self.saveCategories(rows)
                     }
                     resolve()
                 } else {
@@ -95,11 +99,11 @@ ExtractCategories.prototype = {
             })
         })
     },
-    getCategoriesIteration: function(categorycount){
+    getAllCategories: function(categorycount) {
         var self = this;
         return when.promise(function(resolve, reject){
             var _getCategories = [];
-            for (var i = 0, total = categorycount; i < total; i+=100) {
+            for (var i = 0, total = categorycount; i < total; i+=limit) {
                 _getCategories.push(function(data) {
                     return function() {
                         return self.getCategories(data);
@@ -125,14 +129,19 @@ ExtractCategories.prototype = {
         var self = this;
         return when.promise(function(resolve, reject) {
             if(!filePath) {
-                var count_query = config["mysql-query"]["categoriesCount"];
+                var count_query = categoriesCountQuery;
                 count_query = count_query.replace(/<<tableprefix>>/g, config["table_prefix"]);
                 self.connection.query(count_query, function (error, rows, fields) {
                     if (!error) {
                         var categorycount = rows[0]["categorycount"];
                         if (categorycount > 0) {
-                            self.getCategoriesIteration(categorycount)
-                            resolve()
+                            self.getAllCategories(categorycount)
+                             .then(function(){
+                                resolve()
+                             })
+                             .catch(function(){
+                                reject()
+                             })
                         } else {
                             errorLogger("no categories found");
                             self.connection.end();
@@ -149,9 +158,17 @@ ExtractCategories.prototype = {
                     categoryids=(fs.readFileSync(filePath, 'utf-8')).split(",");
                 }
                 if(categoryids.length>0){
-                    self.getCategoriesIteration(categoryids.length)
+                    self.getAllCategories(categoryids.length)
+                     .then(function(){
+                         resolve()
+                     })
+                     .catch(function(){
+                         reject()
+                      })
+                }else{
+                    resolve();
                 }
-                resolve();
+
             }
         })
 

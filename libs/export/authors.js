@@ -1,23 +1,28 @@
 /**
  * External module Dependencies.
  */
-var mkdirp    = require('mkdirp'),
-    path      = require('path'),
-    fs = require('fs'),
-    when      = require('when'),
-    guard = require('when/guard'),
-    parallel = require('when/parallel');
+var mkdirp      = require('mkdirp'),
+    path        = require('path'),
+    fs          = require('fs'),
+    when         = require('when'),
+    guard       = require('when/guard'),
+    parallel    = require('when/parallel');
 
 /**
  * Internal module Dependencies.
  */
-var helper = require('../../libs/utils/helper.js');
+var helper      = require('../../libs/utils/helper.js');
 
 
-var authorConfig = config.modules.authors,
-    authorids=[],
-    authorsFolderPath = path.resolve(config.data,config.entryfolder, authorConfig.dirName),
-    masterFolderPath = path.resolve(config.data, 'master',config.entryfolder);
+var authorConfig             = config.modules.authors,
+    authorids                =[],
+    limit                    =100,
+    authorsFolderPath        = path.resolve(config.data,config.entryfolder, authorConfig.dirName),
+    masterFolderPath         = path.resolve(config.data, 'master',config.entryfolder),
+    authorsCountQuery        = "SELECT count(users.ID) as usercount FROM <<tableprefix>>users users INNER JOIN <<tableprefix>>usermeta usermeta1 ON usermeta1.user_id= users.ID AND usermeta1.meta_key = 'first_name' INNER JOIN <<tableprefix>>usermeta usermeta2 ON usermeta2.user_id = users.ID AND usermeta2.meta_key = 'last_name' INNER JOIN <<tableprefix>>usermeta usermeta3 ON usermeta3.user_id = users.ID AND usermeta3.meta_key = 'description'",
+    authorsQuery             = "SELECT users.ID,users.user_login,users.user_email,usermeta1.meta_value AS first_name, usermeta2.meta_value as last_name,usermeta3.meta_value as description FROM <<tableprefix>>users users INNER JOIN <<tableprefix>>usermeta usermeta1 ON usermeta1.user_id= users.ID AND usermeta1.meta_key = 'first_name' INNER JOIN <<tableprefix>>usermeta usermeta2 ON usermeta2.user_id = users.ID AND usermeta2.meta_key = 'last_name' INNER JOIN <<tableprefix>>usermeta usermeta3 ON usermeta3.user_id = users.ID AND usermeta3.meta_key = 'description'",
+    authorsByIDQuery         = "SELECT users.ID,users.user_login,users.user_email,usermeta1.meta_value AS first_name, usermeta2.meta_value as last_name,usermeta3.meta_value as description FROM <<tableprefix>>users users INNER JOIN <<tableprefix>>usermeta usermeta1 ON usermeta1.user_id= users.ID AND usermeta1.meta_key = 'first_name' INNER JOIN <<tableprefix>>usermeta usermeta2 ON usermeta2.user_id = users.ID AND usermeta2.meta_key = 'last_name' INNER JOIN <<tableprefix>>usermeta usermeta3 ON usermeta3.user_id = users.ID AND usermeta3.meta_key = 'description' WHERE users.ID IN ";
+
 
 /**
  * Create folders and files
@@ -35,7 +40,7 @@ function ExtractAuthors(){
 }
 
 ExtractAuthors.prototype = {
-    putAuthors: function(authordetails){
+    saveAuthors: function(authordetails) {
         return when.promise(function(resolve, reject) {
             var slugRegExp = new RegExp("[^a-z0-9_-]+", "g");
             var authordata = helper.readFile(path.join(authorsFolderPath, authorConfig.fileName));
@@ -52,21 +57,21 @@ ExtractAuthors.prototype = {
             resolve();
         })
     },
-    getAuthors: function(skip){
+    getAuthors: function(skip) {
         var self = this;
-        return when.promise(function(resolve, reject){
+        return when.promise(function(resolve, reject) {
             var query;
             if(authorids.length==0)
-                query = config["mysql-query"]["authors"];   //Query for all authors
+                query = authorsQuery;
             else
-                query = config["mysql-query"]["authorsByID"]+ "("+authorids+")";    //Query for authors by id
+                query = authorsByIDQuery + "("+authorids+")";    //Query for authors by id
 
             query = query.replace(/<<tableprefix>>/g, config["table_prefix"]);
-            query = query + " limit " + skip + ",100";
+            query = query + " limit " + skip + ", "+limit;
             self.connection.query(query, function (error, rows, fields) {
                 if (!error) {
                     if (rows.length > 0) {
-                        self.putAuthors(rows)
+                        self.saveAuthors(rows)
                     }
                         resolve()
                 } else {
@@ -76,11 +81,11 @@ ExtractAuthors.prototype = {
             })
         })
     },
-    getAuthorsIteration: function(usercount){
+    getAllAuthors: function(usercount) {
         var self = this;
         return when.promise(function(resolve, reject){
             var _getAuthors = [];
-            for (var i = 0, total = usercount; i < total; i+=100) {
+            for (var i = 0, total = usercount; i < total; i+=limit) {
                 _getAuthors.push(function(data) {
                     return function() {
                         return self.getAuthors(data);
@@ -106,14 +111,19 @@ ExtractAuthors.prototype = {
         var self = this;
         return when.promise(function(resolve, reject) {
             if(!filePath) {
-                var count_query = config["mysql-query"]["authorsCount"];
+                var count_query = authorsCountQuery;
                 count_query = count_query.replace(/<<tableprefix>>/g, config["table_prefix"]);
                 self.connection.query(count_query, function (error, rows, fields) {
                     if (!error) {
                         var usercount = rows[0]["usercount"];
                         if (usercount > 0) {
-                            self.getAuthorsIteration(usercount)
-                            resolve()
+                            self.getAllAuthors(usercount)
+                            .then(function(){
+                                resolve()
+                            })
+                            .catch(function(){
+                                 reject()
+                            })
                         } else {
                             errorLogger("no authors found");
                             self.connection.end();
@@ -130,9 +140,17 @@ ExtractAuthors.prototype = {
                     authorids=(fs.readFileSync(filePath, 'utf-8')).split(",");
                 }
                 if(authorids.length>0){
-                    self.getAuthorsIteration(authorids.length)
+                    self.getAllAuthors(authorids.length)
+                    .then(function(){
+                       resolve()
+                    })
+                    .catch(function(){
+                       reject()
+                   })
+                } else {
+                    resolve()
                 }
-                resolve();
+
             }
         })
 

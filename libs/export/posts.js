@@ -1,25 +1,31 @@
 /**
  * External module Dependencies.
  */
-var mkdirp    = require('mkdirp'),
-    path      = require('path'),
-    _ = require('lodash'),
-    url = require('url'),
-    fs = require('fs'),
-    when      = require('when'),
-    guard = require('when/guard'),
-    parallel = require('when/parallel');
+var mkdirp      = require('mkdirp'),
+    path        = require('path'),
+    fs          = require('fs'),
+    when        = require('when'),
+    guard       = require('when/guard'),
+    parallel    = require('when/parallel');
 
 /**
  * Internal module Dependencies.
  */
-var helper = require('../../libs/utils/helper.js');
+var helper      = require('../../libs/utils/helper.js');
 
-var postConfig = config.modules.posts,
-    link_structure="",site_url="",postids=[],
-    postFolderPath = path.resolve(config.data,config.entryfolder, postConfig.dirName),
-    assetfolderpath=path.resolve(config.data, config.modules.asset.dirName),
-    masterFolderPath = path.resolve(config.data, 'master',config.entryfolder);
+var postConfig                  = config.modules.posts,
+    permalink_structure         = "",
+    siteurl                     = "",
+    limit                       = 100,
+    postids                     = [],
+    postFolderPath              = path.resolve(config.data,config.entryfolder, postConfig.dirName),
+    assetfolderpath             = path.resolve(config.data, config.modules.asset.dirName),
+    masterFolderPath            = path.resolve(config.data, 'master',config.entryfolder),
+    postsCountQuery             = "SELECT count(p.ID) as postcount FROM <<tableprefix>>posts p WHERE p.post_type='post' AND p.post_status='publish'",
+    postsQuery                  = "SELECT p.ID,p.post_author,u.user_login,p.post_title,p.post_name,p.guid,p.post_content,p.post_date,p.post_date_gmt, GROUP_CONCAT(t.slug) AS post_category,p.post_author,u.user_login FROM <<tableprefix>>posts p LEFT JOIN <<tableprefix>>users u ON u.ID = p.post_author LEFT JOIN <<tableprefix>>term_relationships rel ON rel.object_id = p.ID LEFT JOIN <<tableprefix>>term_taxonomy tax ON tax.term_taxonomy_id = rel.term_taxonomy_id LEFT JOIN <<tableprefix>>terms t ON t.term_id = tax.term_id WHERE p.post_type='post' AND p.post_status='publish' GROUP BY p.ID ORDER BY p.post_date asc",
+    postsByIDQuery              = "SELECT p.ID,p.post_author,u.user_login,p.post_title,p.post_name,p.guid,p.post_content,p.post_date,p.post_date_gmt, GROUP_CONCAT(t.slug) AS post_category,p.post_author,u.user_login FROM <<tableprefix>>posts p LEFT JOIN <<tableprefix>>users u ON u.ID = p.post_author LEFT JOIN <<tableprefix>>term_relationships rel ON rel.object_id = p.ID LEFT JOIN <<tableprefix>>term_taxonomy tax ON tax.term_taxonomy_id = rel.term_taxonomy_id LEFT JOIN <<tableprefix>>terms t ON t.term_id = tax.term_id WHERE p.post_type='post' AND p.post_status='publish' AND p.ID IN <<postids>> GROUP BY p.ID ORDER BY p.post_date asc",
+    permalink_structureQuery    = "SELECT option_value FROM <<tableprefix>>options WHERE option_name='permalink_structure'",
+    siteURLQuery                = "SELECT option_value FROM <<tableprefix>>options WHERE option_name='siteurl'";
 
 
 mkdirp.sync(postFolderPath);
@@ -30,7 +36,7 @@ helper.writeFile(path.join(masterFolderPath, postConfig.masterfile),'{"en-us":{}
 function ExtractPosts(){
     this.connection=helper.connect();
     //Get the detail of permalink and siteurl
-    var permalinkquery=config["mysql-query"]["permalink"];
+    var permalinkquery=permalink_structureQuery;
     permalinkquery=permalinkquery.replace(/<<tableprefix>>/g,config["table_prefix"])
     this.connection.query(permalinkquery, function(error, rows, fields) {
         if(!error){
@@ -38,7 +44,7 @@ function ExtractPosts(){
                 link_structure=rows[0]['option_value'];
         }
     })
-    var siteurlquery=config["mysql-query"]["siteurl"];
+    var siteurlquery=siteURLQuery;
     siteurlquery=siteurlquery.replace(/<<tableprefix>>/g,config["table_prefix"])
     this.connection.query(siteurlquery, function(error, rows, fields) {
         if(!error){
@@ -49,7 +55,7 @@ function ExtractPosts(){
 }
 
 ExtractPosts.prototype = {
-    getURL: function(post,permalink_structure,siteurl,guid){
+    getURL: function(post, guid){
         var lastslash=false;
         if(permalink_structure==""){
             return guid
@@ -116,15 +122,15 @@ ExtractPosts.prototype = {
             return posturl
         }
     },
-    putPosts: function(permalink_structure,siteurl,postsdetails){
+    savePosts: function(postsDetails){
         var self = this;
         return when.promise(function(resolve, reject) {
             var postdata = helper.readFile(path.join(postFolderPath, postConfig.fileName));
             var postmaster =helper.readFile(path.join(masterFolderPath, postConfig.masterfile));
             var featuredImage=helper.readFile(path.join(assetfolderpath, config.modules.asset.featuredfileName));
-            postsdetails.map(function (data, index) {
+            postsDetails.map(function (data, index) {
                 var guid="/"+data["guid"].replace(/^(?:\/\/|[^\/]+)*\//, "");
-                postdata[data["ID"]]={title:data["post_title"],url:self.getURL(data,permalink_structure,siteurl,guid),author:data["user_login"].split(","),category:data["post_category"].split(","),
+                postdata[data["ID"]]={title:data["post_title"],url:self.getURL(data,guid),author:data["user_login"].split(","),category:data["post_category"].split(","),
                 date:data["post_date_gmt"].toISOString(),guid:guid,full_description:data["post_content"]}
                 if(featuredImage)
                      postdata[data["ID"]]["featured_image"]=featuredImage[data["ID"]]
@@ -143,18 +149,17 @@ ExtractPosts.prototype = {
         return when.promise(function(resolve, reject) {
             var query;
             if(postids.length==0)
-                 query=config["mysql-query"]["posts"]; //Query for all posts
+                 query=postsQuery; //Query for all posts
             else{
-                query = config["mysql-query"]["postsByID"]; //Query for posts by id
+                query = postsByIDQuery; //Query for posts by id
                 query=query.replace("<<postids>>","("+postids+")")
             }
-
             query=query.replace(/<<tableprefix>>/g,config["table_prefix"]);
-            query = query + " limit " + skip + ",100";
+            query = query + " limit " + skip + ", "+ limit;
             self.connection.query(query, function(error, rows, fields) {
                 if(!error){
                     if(rows.length>0){
-                        self.putPosts(link_structure,site_url,rows)
+                        self.savePosts(rows)
                         resolve();
                     }else{
                         errorLogger("no posts found");
@@ -167,11 +172,11 @@ ExtractPosts.prototype = {
             })
         })
     },
-    getPostsIteration: function(postcount){
+    getAllPosts: function(postCount){
         var self = this;
         return when.promise(function(resolve, reject){
             var _getPosts = [];
-            for (var i = 0, total = postcount; i < total; i+=100) {
+            for (var i = 0, total = postCount; i < total; i+=limit) {
                 _getPosts.push(function(data) {
                     return function() {
                         return self.getPosts(data);
@@ -198,14 +203,19 @@ ExtractPosts.prototype = {
         var self = this;
         return when.promise(function(resolve, reject) {
             if(!filePath) {
-                var count_query = config["mysql-query"]["postsCount"];
+                var count_query = postsCountQuery;
                 count_query = count_query.replace(/<<tableprefix>>/g, config["table_prefix"]);
                 self.connection.query(count_query, function (error, rows, fields) {
                     if (!error) {
                         var postcount = rows[0]["postcount"];
                         if (postcount > 0) {
-                            self.getPostsIteration(postcount)
-                            resolve()
+                            self.getAllPosts(postcount)
+                            .then(function(){
+                                resolve()
+                            })
+                            .catch(function(){
+                                reject()
+                            })
                         } else {
                             errorLogger("no posts found");
                             self.connection.end();
@@ -222,9 +232,16 @@ ExtractPosts.prototype = {
                     postids=(fs.readFileSync(filePath, 'utf-8')).split(",");
                 }
                 if(postids.length>0){
-                    self.getPostsIteration(postids.length)
+                    self.getAllPosts(postids.length)
+                    .then(function(){
+                        resolve()
+                    })
+                    .catch(function(){
+                        reject()
+                    })
+                }else{
+                    resolve()
                 }
-                resolve();
             }
         })
     }

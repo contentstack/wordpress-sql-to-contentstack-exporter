@@ -75,8 +75,7 @@ The logs for failed Media(assets) are recorded in 'wp_failed.json' and is stored
  1. The internal links will not be updated.
  2. There is no provision to migrate authors' profile pictures or their social profile details, comments on posts, and pages.
  3. The author count in XML and MySQL export files are different.
- 4. In XML-based export process, if the version of WordPress is lower than 4, the category description and parent details will be absent.
- 5. Only published posts will be migrated.
+ 4. Only published posts will be migrated.
 
 ## License
 This project is covered under the MIT license.
