@@ -118,11 +118,11 @@ ExtractPosts.prototype = {
             //above two commented lines to remoce last slash from url if we don't want
             if(!lastslash){
                 //this condition is to check wheather url structure having last slash or not
-                posturl=siteurl+posturl
+                //posturl=siteurl+posturl
                 return posturl
             }
-            return siteurl+posturl  //send absolute url of post
-           // return posturl  //only relative url will be save
+            //return siteurl+posturl  //send absolute url of post
+            return posturl  //only relative url will be save
         }
     },
     savePosts: function(postsDetails){
