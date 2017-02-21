@@ -23,13 +23,13 @@ assetids                      =[],
     assetmasterFolderPath     = path.resolve(config.data, 'master'),
     failedJSON                = helper.readFile(path.join(assetmasterFolderPath, 'wp_failed.json')) || {},
     //All Queries
-    assetsCountQuery           ="SELECT count(ID) as assetcount FROM <<tableprefix>>posts WHERE post_type='attachment'",
-    assetQuery                 ="SELECT * FROM <<tableprefix>>posts WHERE post_type='attachment'",
-    assetByIDQuery             ="SELECT * FROM <<tableprefix>>posts WHERE post_type='attachment' AND ID IN ",
-    featuredImageQuery         ="SELECT <<tableprefix>>posts.ID,<<tableprefix>>postmeta.meta_value FROM <<tableprefix>>posts,<<tableprefix>>postmeta WHERE <<tableprefix>>posts.ID=<<tableprefix>>postmeta.post_id AND <<tableprefix>>postmeta.meta_key='_thumbnail_id' AND <<tableprefix>>posts.post_type='post' AND <<tableprefix>>posts.post_status='publish'";
+    assetsCountQuery           = "SELECT count(ID) as assetcount FROM <<tableprefix>>posts WHERE post_type='attachment'",
+    assetQuery                 = "SELECT * FROM <<tableprefix>>posts WHERE post_type='attachment'",
+    assetByIDQuery             = "SELECT * FROM <<tableprefix>>posts WHERE post_type='attachment' AND ID IN ",
+    featuredImageQuery         = "SELECT <<tableprefix>>posts.ID,<<tableprefix>>postmeta.meta_value FROM <<tableprefix>>posts,<<tableprefix>>postmeta WHERE <<tableprefix>>posts.ID=<<tableprefix>>postmeta.post_id AND <<tableprefix>>postmeta.meta_key='_thumbnail_id' AND <<tableprefix>>posts.post_type='post' AND <<tableprefix>>posts.post_status='publish'";
 
 
-if (!fs.existsSync(assetFolderPath))  {
+if (!fs.existsSync(assetFolderPath)) {
     mkdirp.sync(assetFolderPath);
     helper.writeFile(path.join(assetFolderPath, assetConfig.fileName))
     helper.writeFile(path.join(assetFolderPath, assetConfig.featuredfileName))
@@ -43,7 +43,7 @@ var assetData           = helper.readFile(path.join(assetFolderPath, assetConfig
 var assetMapping        = helper.readFile(path.join(assetmasterFolderPath, assetConfig.fileName));
 var assetURLMapping     = helper.readFile(path.join(assetmasterFolderPath, assetConfig.masterfile));
 
-function ExtractAssets()  {
+function ExtractAssets() {
     this.connection = helper.connect();
     var featuredImage = helper.readFile(path.join(assetFolderPath, assetConfig.featuredfileName));
     var query = featuredImageQuery;
