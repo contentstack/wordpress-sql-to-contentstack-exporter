@@ -41,21 +41,21 @@ function ExtractPosts(){
     this.connection.query(permalinkquery, function(error, rows, fields) {
         if(!error){
             if(rows[0]['option_value']&&rows[0]['option_value']!="")
-                link_structure=rows[0]['option_value'];
+                permalink_structure=rows[0]['option_value'];
         }
     })
     var siteurlquery=siteURLQuery;
     siteurlquery=siteurlquery.replace(/<<tableprefix>>/g,config["table_prefix"])
     this.connection.query(siteurlquery, function(error, rows, fields) {
         if(!error){
-            site_url=rows[0]['option_value']
+            siteurl=rows[0]['option_value']
         }
     })
 
 }
 
 ExtractPosts.prototype = {
-    getURL: function(post, guid){
+    getURL: function(post, guid,permalink_structure){
         var lastslash=false;
         if(permalink_structure==""){
             return guid
@@ -70,6 +70,7 @@ ExtractPosts.prototype = {
                 permalink_structure.splice((len-1),1)
             }
             var posturl="";
+
             permalink_structure.map(function (structure, index) {
                 var date=new Date(post["post_date_gmt"])
                 if(structure=="%post_id%"){
@@ -112,14 +113,16 @@ ExtractPosts.prototype = {
                         posturl=posturl+"/"+structure+"/";
                 }
             })
+            /*var index=posturl.lastIndexOf("/");
+            posturl=posturl.substring(0,index)*/
+            //above two commented lines to remoce last slash from url if we don't want
             if(!lastslash){
-                var index=posturl.lastIndexOf("/");
-                posturl=posturl.substring(0,index)
-                //added code
+                //this condition is to check wheather url structure having last slash or not
                 posturl=siteurl+posturl
                 return posturl
             }
-            return posturl
+            return siteurl+posturl  //send absolute url of post
+           // return posturl  //only relative url will be save
         }
     },
     savePosts: function(postsDetails){
@@ -130,7 +133,7 @@ ExtractPosts.prototype = {
             var featuredImage=helper.readFile(path.join(assetfolderpath, config.modules.asset.featuredfileName));
             postsDetails.map(function (data, index) {
                 var guid="/"+data["guid"].replace(/^(?:\/\/|[^\/]+)*\//, "");
-                postdata[data["ID"]]={title:data["post_title"],url:self.getURL(data,guid),author:data["user_login"].split(","),category:data["post_category"].split(","),
+                postdata[data["ID"]]={title:data["post_title"],url:self.getURL(data,guid,permalink_structure),author:data["user_login"].split(","),category:data["post_category"].split(","),
                 date:data["post_date_gmt"].toISOString(),guid:guid,full_description:data["post_content"]}
                 if(featuredImage)
                      postdata[data["ID"]]["featured_image"]=featuredImage[data["ID"]]
