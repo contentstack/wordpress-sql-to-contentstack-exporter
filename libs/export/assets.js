@@ -87,7 +87,7 @@ ExtractAssets.prototype =  {
                     if (err) {
                         failedJSON[assets["ID"]] = err
                         if(retrycount==1)
-                            return resolve(assets["ID"])
+                             resolve(assets["ID"])
                         else{
                             self.saveAsset(assets, 1)
                                 .then(function(results){
