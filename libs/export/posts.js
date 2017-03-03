@@ -58,7 +58,21 @@ ExtractPosts.prototype = {
     getURL: function(post, guid,permalink_structure){
         var lastslash=false;
         if(permalink_structure==""){
-            return guid
+            //This code for handle guid and  blog host from it
+            var base= siteurl.split("/");;
+            var len=base.length;
+            var blogname;
+            if(base[len-1]==""){
+                blogname=base[len-2]
+            }else{
+                blogname=base[len-1]
+            }
+            console.log(blogname)
+            var url=guid;
+            var index=url.indexOf(blogname);
+            url=url.split(blogname)
+            url=url[1];
+            return url
         }else{
             permalink_structure=permalink_structure.split("/");
             if(permalink_structure[0]=="")
