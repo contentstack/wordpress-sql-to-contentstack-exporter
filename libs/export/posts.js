@@ -22,8 +22,8 @@ var postConfig                  = config.modules.posts,
     assetfolderpath             = path.resolve(config.data, config.modules.asset.dirName),
     masterFolderPath            = path.resolve(config.data, 'master',config.entryfolder),
     postsCountQuery             = "SELECT count(p.ID) as postcount FROM <<tableprefix>>posts p WHERE p.post_type='post' AND p.post_status='publish'",
-    postsQuery                  = "SELECT p.ID,p.post_author,u.user_login,p.post_title,p.post_name,p.guid,p.post_content,p.post_date,p.post_date_gmt, GROUP_CONCAT(t.slug) AS post_category,p.post_author,u.user_login FROM <<tableprefix>>posts p LEFT JOIN <<tableprefix>>users u ON u.ID = p.post_author LEFT JOIN <<tableprefix>>term_relationships rel ON rel.object_id = p.ID LEFT JOIN <<tableprefix>>term_taxonomy tax ON tax.term_taxonomy_id = rel.term_taxonomy_id LEFT JOIN <<tableprefix>>terms t ON t.term_id = tax.term_id WHERE p.post_type='post' AND p.post_status='publish' GROUP BY p.ID ORDER BY p.post_date asc",
-    postsByIDQuery              = "SELECT p.ID,p.post_author,u.user_login,p.post_title,p.post_name,p.guid,p.post_content,p.post_date,p.post_date_gmt, GROUP_CONCAT(t.slug) AS post_category,p.post_author,u.user_login FROM <<tableprefix>>posts p LEFT JOIN <<tableprefix>>users u ON u.ID = p.post_author LEFT JOIN <<tableprefix>>term_relationships rel ON rel.object_id = p.ID LEFT JOIN <<tableprefix>>term_taxonomy tax ON tax.term_taxonomy_id = rel.term_taxonomy_id LEFT JOIN <<tableprefix>>terms t ON t.term_id = tax.term_id WHERE p.post_type='post' AND p.post_status='publish' AND p.ID IN <<postids>> GROUP BY p.ID ORDER BY p.post_date asc",
+    postsQuery                  = "SELECT p.ID,p.post_author,u.user_login,p.post_title,p.post_name,p.guid,p.post_content,p.post_date,p.post_date_gmt, (SELECT group_concat(<<tableprefix>>terms.slug) FROM <<tableprefix>>terms INNER JOIN <<tableprefix>>term_taxonomy on <<tableprefix>>terms.term_id = <<tableprefix>>term_taxonomy.term_id INNER JOIN <<tableprefix>>term_relationships wpr on wpr.term_taxonomy_id = <<tableprefix>>term_taxonomy.term_taxonomy_id WHERE taxonomy= 'category' and p.ID = wpr.object_id)AS post_category,p.post_author,u.user_login FROM <<tableprefix>>posts p LEFT JOIN <<tableprefix>>users u ON u.ID = p.post_author WHERE p.post_type='post' AND p.post_status='publish' GROUP BY p.ID ORDER BY p.post_date asc",
+    postsByIDQuery              = "SELECT p.ID,p.post_author,u.user_login,p.post_title,p.post_name,p.guid,p.post_content,p.post_date,p.post_date_gmt, (SELECT group_concat(<<tableprefix>>terms.slug) FROM <<tableprefix>>terms INNER JOIN <<tableprefix>>term_taxonomy on <<tableprefix>>terms.term_id = <<tableprefix>>term_taxonomy.term_id INNER JOIN <<tableprefix>>term_relationships wpr on wpr.term_taxonomy_id = <<tableprefix>>term_taxonomy.term_taxonomy_id WHERE taxonomy= 'category' and p.ID = wpr.object_id)AS post_category,p.post_author,u.user_login FROM <<tableprefix>>posts p LEFT JOIN <<tableprefix>>users u ON u.ID = p.post_author WHERE p.post_type='post' AND p.post_status='publish' AND p.ID IN <<postids>> GROUP BY p.ID ORDER BY p.post_date asc",
     permalink_structureQuery    = "SELECT option_value FROM <<tableprefix>>options WHERE option_name='permalink_structure'",
     siteURLQuery                = "SELECT option_value FROM <<tableprefix>>options WHERE option_name='siteurl'";
 
@@ -147,8 +147,13 @@ ExtractPosts.prototype = {
             var featuredImage=helper.readFile(path.join(assetfolderpath, config.modules.asset.featuredfileName));
             postsDetails.map(function (data, index) {
                 var guid="/"+data["guid"].replace(/^(?:\/\/|[^\/]+)*\//, "");
-                postdata[data["ID"]]={title:data["post_title"],url:self.getURL(data,guid,permalink_structure),author:data["user_login"].split(","),category:data["post_category"].split(","),
-                date:data["post_date_gmt"].toISOString(),guid:guid,full_description:data["post_content"]}
+                postdata[data["ID"]]={title:data["post_title"],url:self.getURL(data,guid,permalink_structure),author:data["user_login"].split(","),
+                    date:data["post_date_gmt"].toISOString(),guid:guid,full_description:data["post_content"]}
+                if(data["post_category"]){
+                    postdata[data["ID"]]["category"]=data["post_category"].split(",")
+                }else{
+                    postdata[data["ID"]]["category"]=[]
+                }
                 if(featuredImage)
                      postdata[data["ID"]]["featured_image"]=featuredImage[data["ID"]]
                 postmaster["en-us"][data["ID"]]=""
