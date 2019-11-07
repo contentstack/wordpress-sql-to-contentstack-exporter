@@ -1,8 +1,8 @@
 # Wordpress-sql-to-contentstack-exporter
 
-Built.io Contentstack is a headless CMS with an API-first approach that puts content at the centre. It is designed to simplify the process of publication by separating code from content.
+Contentstack is a headless CMS with an API-first approach that puts content at the centre. It is designed to simplify the process of publication by separating code from content.
 
-This project (export script) allows you to export content from a WordPress Blog using MySQL queries and makes it possible to import it into Built.io Contentstack. Using this project, you can easily export WordPress Users, Categories, Media, and Blog with posts into Built.io Contentstack.
+This project (export script) allows you to export content from a WordPress Blog using MySQL queries and makes it possible to import it into Contentstack. Using this project, you can easily export WordPress Users, Categories, Media, and Blog with posts into Contentstack.
 
 ## Installation
 
@@ -38,7 +38,7 @@ Run the command given below to export all the modules:
   npm run export
   ```
 
-This command will extract data of authors, assets, categories, and posts from the downloaded XML file and convert them in JSON files that is supported in Built.io Contentstack. These files are stored in the path mentioned in the 'data' key in the 'config/index.js' file.
+This command will extract data of authors, assets, categories, and posts from the downloaded XML file and convert them in JSON files that is supported in Contentstack. These files are stored in the path mentioned in the 'data' key in the 'config/index.js' file.
 
 ### Export specific modules
 Run the command given below to export specific modules:
@@ -64,7 +64,7 @@ Modules that you wish to export separately or have failed to export (these modul
 ## Import content
 Copy the 'contenttype' folder from your project and place it in the path mentioned in the 'data' key within the 'config/index.js' file. The 'contentType' folder consist of the basic schema of content types which will help you to migrate your data.
 
-Now, run the [contentstack-importer](https://github.com/builtio-contentstack/contentstack-import) script to import the content to Built.io Contentstack.
+Now, run the [contentstack-importer](https://github.com/builtio-contentstack/contentstack-import) script to import the content to Contentstack.
 
 ## Log
 You can find the logs of the export process under libs/utils/logs. The files included are 'success' and 'error'. Successfully run processes are recorded under 'success' and the errors under 'errors'.
