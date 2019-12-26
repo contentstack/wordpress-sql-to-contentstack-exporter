@@ -2,14 +2,14 @@
   "name": "wordpress-sql-to-contentstack-exporter",
   "version": "0.0.1",
   "dependencies": {
-    "lodash": "^4.17.2",
-    "mkdirp": "^0.5.1",
-    "mysql": "^2.12.0",
+    "lodash": "4.17.2",
+    "mkdirp": "0.5.1",
+    "mysql": "2.12.0",
     "request": "~2.88.0",
-    "when": "^3.7.7",
-    "winston": "^2.2.0"
+    "when": "3.7.7",
+    "winston": "2.2.0"
   },
   "scripts": {
-    "export" : "node app.js"
+    "export": "node app.js"
   }
 }

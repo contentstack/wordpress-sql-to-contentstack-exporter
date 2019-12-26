@@ -1,3 +1,14 @@
 {"level":"error","message":"no featuredImage found","timestamp":"2018-12-17T07:36:08.607Z"}
 {"level":"error","message":"no featuredImage found","timestamp":"2018-12-17T08:03:45.850Z"}
 {"level":"error","message":"no featuredImage found","timestamp":"2018-12-17T08:13:02.241Z"}
+{"level":"error","message":"no featuredImage found","timestamp":"2019-12-17T12:51:51.896Z"}
+{"level":"error","message":"no assets found","timestamp":"2019-12-17T12:51:51.898Z"}
+{"level":"error","message":"no featuredImage found","timestamp":"2019-12-19T07:30:19.185Z"}
+{"level":"error","message":"failed to get featuredImage:   {\"errno\":\"ECONNREFUSED\",\"code\":\"ECONNREFUSED\",\"syscall\":\"connect\",\"address\":\"127.0.0.1\",\"port\":3306,\"fatal\":true}","timestamp":"2019-12-26T12:13:07.631Z"}
+{"level":"error","message":"failed to get assets count:   {\"errno\":\"ECONNREFUSED\",\"code\":\"ECONNREFUSED\",\"syscall\":\"connect\",\"address\":\"127.0.0.1\",\"port\":3306,\"fatal\":true}","timestamp":"2019-12-26T12:13:07.631Z"}
+{"level":"error","message":"{\"errno\":\"ECONNREFUSED\",\"code\":\"ECONNREFUSED\",\"syscall\":\"connect\",\"address\":\"127.0.0.1\",\"port\":3306,\"fatal\":true}","timestamp":"2019-12-26T12:13:07.632Z"}
+{"level":"error","message":"no featuredImage found","timestamp":"2019-12-26T12:13:51.564Z"}
+{"level":"error","message":"no featuredImage found","timestamp":"2019-12-26T12:14:41.563Z"}
+{"level":"error","message":"no featuredImage found","timestamp":"2019-12-26T13:59:43.653Z"}
+{"level":"error","message":"no featuredImage found","timestamp":"2019-12-26T14:01:31.987Z"}
+{"level":"error","message":"no featuredImage found","timestamp":"2019-12-26T18:58:06.323Z"}

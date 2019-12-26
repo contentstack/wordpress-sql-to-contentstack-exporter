@@ -26,9 +26,9 @@
     }
   },
   "mysql":{
-    "host":"<<mysql host>>",
-    "user":"<<mysql username>>",
-    "password":"<<mysql password>>",
-    "database":"<<mysql database of wordpress>>"
+    "host":"",
+    "user":"",
+    "password":"",
+    "database":""
   }
 }

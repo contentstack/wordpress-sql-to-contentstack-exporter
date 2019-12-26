@@ -37,3 +37,92 @@
 {"level":"info","message":"exported post '18'","timestamp":"2018-12-17T08:13:02.310Z"}
 {"level":"info","message":"exported post '20'","timestamp":"2018-12-17T08:13:02.311Z"}
 {"level":"info","message":"Data exporting has been completed","timestamp":"2018-12-17T08:13:02.312Z"}
+{"level":"info","message":"exporting assets...","timestamp":"2019-12-17T12:51:51.888Z"}
+{"level":"info","message":"exporting authors...","timestamp":"2019-12-17T12:51:51.898Z"}
+{"level":"info","message":"exported author '1'","timestamp":"2019-12-17T12:51:51.903Z"}
+{"level":"info","message":"exporting categories...","timestamp":"2019-12-17T12:51:51.904Z"}
+{"level":"info","message":"exported categories '1'","timestamp":"2019-12-17T12:51:51.907Z"}
+{"level":"info","message":"exported categories '2'","timestamp":"2019-12-17T12:51:51.907Z"}
+{"level":"info","message":"exporting posts...","timestamp":"2019-12-17T12:51:51.908Z"}
+{"level":"info","message":"exported post '1'","timestamp":"2019-12-17T12:51:51.910Z"}
+{"level":"info","message":"exported post '5'","timestamp":"2019-12-17T12:51:51.910Z"}
+{"level":"info","message":"Data exporting has been completed","timestamp":"2019-12-17T12:51:51.911Z"}
+{"level":"info","message":"exporting assets...","timestamp":"2019-12-19T07:30:19.177Z"}
+{"level":"info","message":"exported asset '10'","timestamp":"2019-12-19T07:30:19.205Z"}
+{"level":"info","message":"exported asset '11'","timestamp":"2019-12-19T07:30:19.205Z"}
+{"level":"info","message":"exported asset '12'","timestamp":"2019-12-19T07:30:19.207Z"}
+{"level":"info","message":"exporting authors...","timestamp":"2019-12-19T07:30:19.208Z"}
+{"level":"info","message":"exported author '1'","timestamp":"2019-12-19T07:30:19.211Z"}
+{"level":"info","message":"exporting categories...","timestamp":"2019-12-19T07:30:19.211Z"}
+{"level":"info","message":"exported categories '1'","timestamp":"2019-12-19T07:30:19.214Z"}
+{"level":"info","message":"exported categories '2'","timestamp":"2019-12-19T07:30:19.214Z"}
+{"level":"info","message":"exporting posts...","timestamp":"2019-12-19T07:30:19.214Z"}
+{"level":"info","message":"exported post '1'","timestamp":"2019-12-19T07:30:19.218Z"}
+{"level":"info","message":"exported post '5'","timestamp":"2019-12-19T07:30:19.218Z"}
+{"level":"info","message":"Data exporting has been completed","timestamp":"2019-12-19T07:30:19.218Z"}
+{"level":"info","message":"exporting assets...","timestamp":"2019-12-26T12:13:07.626Z"}
+{"level":"info","message":"exporting assets...","timestamp":"2019-12-26T12:13:51.553Z"}
+{"level":"info","message":"asset already present '10'","timestamp":"2019-12-26T12:13:51.568Z"}
+{"level":"info","message":"asset already present '11'","timestamp":"2019-12-26T12:13:51.569Z"}
+{"level":"info","message":"asset already present '12'","timestamp":"2019-12-26T12:13:51.569Z"}
+{"level":"info","message":"exporting authors...","timestamp":"2019-12-26T12:13:51.570Z"}
+{"level":"info","message":"exported author '1'","timestamp":"2019-12-26T12:13:51.576Z"}
+{"level":"info","message":"exporting categories...","timestamp":"2019-12-26T12:13:51.576Z"}
+{"level":"info","message":"exported categories '1'","timestamp":"2019-12-26T12:13:51.582Z"}
+{"level":"info","message":"exported categories '2'","timestamp":"2019-12-26T12:13:51.582Z"}
+{"level":"info","message":"exporting posts...","timestamp":"2019-12-26T12:13:51.583Z"}
+{"level":"info","message":"exported post '1'","timestamp":"2019-12-26T12:13:51.585Z"}
+{"level":"info","message":"exported post '5'","timestamp":"2019-12-26T12:13:51.586Z"}
+{"level":"info","message":"Data exporting has been completed","timestamp":"2019-12-26T12:13:51.586Z"}
+{"level":"info","message":"exporting assets...","timestamp":"2019-12-26T12:14:41.554Z"}
+{"level":"info","message":"asset already present '10'","timestamp":"2019-12-26T12:14:41.566Z"}
+{"level":"info","message":"asset already present '11'","timestamp":"2019-12-26T12:14:41.566Z"}
+{"level":"info","message":"asset already present '12'","timestamp":"2019-12-26T12:14:41.567Z"}
+{"level":"info","message":"exporting authors...","timestamp":"2019-12-26T12:14:41.568Z"}
+{"level":"info","message":"exported author '1'","timestamp":"2019-12-26T12:14:41.571Z"}
+{"level":"info","message":"exporting categories...","timestamp":"2019-12-26T12:14:41.572Z"}
+{"level":"info","message":"exported categories '1'","timestamp":"2019-12-26T12:14:41.575Z"}
+{"level":"info","message":"exported categories '2'","timestamp":"2019-12-26T12:14:41.575Z"}
+{"level":"info","message":"exporting posts...","timestamp":"2019-12-26T12:14:41.576Z"}
+{"level":"info","message":"exported post '1'","timestamp":"2019-12-26T12:14:41.578Z"}
+{"level":"info","message":"exported post '5'","timestamp":"2019-12-26T12:14:41.578Z"}
+{"level":"info","message":"Data exporting has been completed","timestamp":"2019-12-26T12:14:41.579Z"}
+{"level":"info","message":"exporting assets...","timestamp":"2019-12-26T13:59:43.641Z"}
+{"level":"info","message":"asset already present '10'","timestamp":"2019-12-26T13:59:43.659Z"}
+{"level":"info","message":"asset already present '11'","timestamp":"2019-12-26T13:59:43.660Z"}
+{"level":"info","message":"asset already present '12'","timestamp":"2019-12-26T13:59:43.660Z"}
+{"level":"info","message":"exporting authors...","timestamp":"2019-12-26T13:59:43.663Z"}
+{"level":"info","message":"exported author '1'","timestamp":"2019-12-26T13:59:43.673Z"}
+{"level":"info","message":"exporting categories...","timestamp":"2019-12-26T13:59:43.675Z"}
+{"level":"info","message":"exported categories '1'","timestamp":"2019-12-26T13:59:43.685Z"}
+{"level":"info","message":"exported categories '2'","timestamp":"2019-12-26T13:59:43.686Z"}
+{"level":"info","message":"exporting posts...","timestamp":"2019-12-26T13:59:43.687Z"}
+{"level":"info","message":"exported post '1'","timestamp":"2019-12-26T13:59:43.693Z"}
+{"level":"info","message":"exported post '5'","timestamp":"2019-12-26T13:59:43.694Z"}
+{"level":"info","message":"Data exporting has been completed","timestamp":"2019-12-26T13:59:43.695Z"}
+{"level":"info","message":"exporting assets...","timestamp":"2019-12-26T14:01:31.973Z"}
+{"level":"info","message":"asset already present '10'","timestamp":"2019-12-26T14:01:31.991Z"}
+{"level":"info","message":"asset already present '11'","timestamp":"2019-12-26T14:01:31.991Z"}
+{"level":"info","message":"asset already present '12'","timestamp":"2019-12-26T14:01:31.992Z"}
+{"level":"info","message":"exporting authors...","timestamp":"2019-12-26T14:01:31.994Z"}
+{"level":"info","message":"exported author '1'","timestamp":"2019-12-26T14:01:32.001Z"}
+{"level":"info","message":"exporting categories...","timestamp":"2019-12-26T14:01:32.002Z"}
+{"level":"info","message":"exported categories '1'","timestamp":"2019-12-26T14:01:32.007Z"}
+{"level":"info","message":"exported categories '2'","timestamp":"2019-12-26T14:01:32.007Z"}
+{"level":"info","message":"exporting posts...","timestamp":"2019-12-26T14:01:32.008Z"}
+{"level":"info","message":"exported post '1'","timestamp":"2019-12-26T14:01:32.011Z"}
+{"level":"info","message":"exported post '5'","timestamp":"2019-12-26T14:01:32.012Z"}
+{"level":"info","message":"Data exporting has been completed","timestamp":"2019-12-26T14:01:32.013Z"}
+{"level":"info","message":"exporting assets...","timestamp":"2019-12-26T18:58:06.316Z"}
+{"level":"info","message":"exported asset '11'","timestamp":"2019-12-26T18:58:06.341Z"}
+{"level":"info","message":"exported asset '10'","timestamp":"2019-12-26T18:58:06.343Z"}
+{"level":"info","message":"exported asset '12'","timestamp":"2019-12-26T18:58:06.344Z"}
+{"level":"info","message":"exporting authors...","timestamp":"2019-12-26T18:58:06.346Z"}
+{"level":"info","message":"exported author '1'","timestamp":"2019-12-26T18:58:06.348Z"}
+{"level":"info","message":"exporting categories...","timestamp":"2019-12-26T18:58:06.349Z"}
+{"level":"info","message":"exported categories '1'","timestamp":"2019-12-26T18:58:06.352Z"}
+{"level":"info","message":"exported categories '2'","timestamp":"2019-12-26T18:58:06.352Z"}
+{"level":"info","message":"exporting posts...","timestamp":"2019-12-26T18:58:06.352Z"}
+{"level":"info","message":"exported post '1'","timestamp":"2019-12-26T18:58:06.355Z"}
+{"level":"info","message":"exported post '5'","timestamp":"2019-12-26T18:58:06.355Z"}
+{"level":"info","message":"Data exporting has been completed","timestamp":"2019-12-26T18:58:06.355Z"}
