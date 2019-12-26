@@ -64,7 +64,8 @@ ExtractCategories.prototype =  {
                     parent=[""];
                 }
                 var url = "/category/" + slug.toLowerCase().replace(slugRegExp, '-');
-                categorydata[slug] = {"id":id,"title": title, "url": url, "description":description, "parent":parent}
+                categorydata[slug] = {"id":id,"title": title, "url": url, "description":description, "parent":parent, "uid":slug}
+                console.log("slugggg", slug)
                 categorymaster["en-us"][slug]=""
                 successLogger("exported categories " +"'"+id+"'");
             })

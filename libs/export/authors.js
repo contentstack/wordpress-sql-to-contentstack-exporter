@@ -48,7 +48,7 @@ ExtractAuthors.prototype = {
             authordetails.map(function (data, index) {
                 var title = data["user_login"];
                 var url = "/author/" + title.toLowerCase().replace(slugRegExp, '-');
-                authordata[data["user_login"]] = {"ID":data["ID"],"title": title, "url": url, "email":data["user_email"], "first_name":data["first_name"], "last_name":data["last_name"], "biographical_info":data["description"]}
+                authordata[data["user_login"]] = {"ID":data["ID"],"title": title, "url": url, "email":data["user_email"], "first_name":data["first_name"], "last_name":data["last_name"], "biographical_info":data["description"], uid:data["user_login"]}
                 authormaster["en-us"][data["user_login"]]=""
                 successLogger("exported author " +"'"+data["ID"]+"'");
             })

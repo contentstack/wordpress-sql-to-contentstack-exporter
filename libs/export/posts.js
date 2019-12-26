@@ -148,7 +148,7 @@ ExtractPosts.prototype = {
             postsDetails.map(function (data, index) {
                 var guid="/"+data["guid"].replace(/^(?:\/\/|[^\/]+)*\//, "");
                 postdata[data["ID"]]={title:data["post_title"],url:self.getURL(data,guid,permalink_structure),author:data["user_login"].split(","),
-                    date:data["post_date_gmt"].toISOString(),guid:guid,full_description:data["post_content"]}
+                    date:data["post_date_gmt"].toISOString(),guid:guid,full_description:data["post_content"],uid:data["ID"]}
                 if(data["post_category"]){
                     postdata[data["ID"]]["category"]=data["post_category"].split(",")
                 }else{
